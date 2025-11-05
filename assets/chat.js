@@ -1,11 +1,14 @@
 jQuery(function ($) {
-    const $b = $('#dsb-bubble');
-    const $c = $('#dsb-chat');
-    const $m = $('#dsb-messages');
-    const $i = $('#dsb-text');
-    const $s = $('#dsb-send');
-    const $x = $('#dsb-close');
+    const $b = $('#lc-bubble');
+    const $c = $('#lc-chat');
+    const $m = $('#lc-messages');
+    const $i = $('#lc-text');
+    const $s = $('#lc-send');
+    const $x = $('#lc-close');
     let first = true;
+
+    // STARTET GESCHLOSSEN!
+    $c.addClass('closed');
 
     $b.on('click', () => {
         $c.toggleClass('closed');
@@ -23,7 +26,7 @@ jQuery(function ($) {
     });
 
     function welcome() {
-        $m.html('<div class="bot">' + dsb.welcome + '</div>');
+        $m.html('<div class="bot">' + lc.welcome + '</div>');
         scroll();
     }
 
@@ -33,25 +36,19 @@ jQuery(function ($) {
         $m.append('<div class="user">Du: ' + msg + '</div>');
         $i.val(''); scroll();
 
-        $.post(dsb.ajax, {
-            action: 'dsb_chat',
+        $.post(lc.ajax, {
+            action: 'lc_chat',
             msg: msg,
-            nonce: dsb.nonce
+            nonce: lc.nonce
         }, r => {
-            // MAGIC: URLs werden klickbar + _blank!
-            let text = r.success ? r.data : r.data;
-            text = text.replace(
-                /(https?:\/\/[^\s]+)/g,
-                '<a href="$1" target="_blank" rel="noopener" style="color:#0073aa; text-decoration:underline;">$1</a>'
-            );
+            let text = r.success ? r.data : 'Fehler';
+            text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:#0073aa; text-decoration:underline;">$1</a>');
             $m.append('<div class="bot">' + text + '</div>');
             scroll();
         });
     }
 
-    function scroll() {
-        $m.scrollTop($m[0].scrollHeight);
-    }
+    function scroll() { $m.scrollTop($m[0].scrollHeight); }
 
     setInterval(() => $b.toggleClass('pulse'), 3000);
 });
