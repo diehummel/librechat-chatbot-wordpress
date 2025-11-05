@@ -6,11 +6,15 @@ add_action('admin_menu', function () {
 });
 
 function lc_admin_page() {
-    if ($_POST['save']) {
-        update_option('lc_welcome', wp_kses_post($_POST['welcome']));
-        echo '<div class="notice notice-success"><p>Gespeichert!</p></div>';
+    // FIX: Keine Warnings mehr!
+    $saved  = isset($_POST['save']);
+    $crawled = isset($_POST['crawl']);
+
+    if ($saved) {
+        update_option('lc_welcome', wp_kses_post($_POST['welcome'] ?? ''));
+        echo '<div class="notice notice-success"><p>✔ Gespeichert!</p></div>';
     }
-    if ($_POST['crawl']) {
+    if ($crawled) {
         $count = lc_crawl();
         echo '<div class="notice notice-success"><p>✔ ' . $count . ' Seiten NEU gecrawlt!</p></div>';
     }
@@ -24,11 +28,16 @@ function lc_admin_page() {
                     <td><textarea name="welcome" rows="4" class="large-text"><?= esc_textarea(get_option('lc_welcome', "Hallo! Ich bin dein KI-Assistent.\nFrag mich alles über diese Website! 😊")) ?></textarea></td>
                 </tr>
             </table>
-            <?php submit_button('Speichern', 'primary', 'save'); ?>
+            <p class="submit">
+                <input type="submit" name="save" class="button button-primary" value="Speichern">
+            </p>
         </form>
+
         <hr>
         <form method="post">
-            <?php submit_button('Jetzt NEU crawlen', 'secondary', 'crawl'); ?>
+            <p class="submit">
+                <input type="submit" name="crawl" class="button button-secondary" value="🔄 Jetzt NEU crawlen">
+            </p>
         </form>
     </div>
     <?php
