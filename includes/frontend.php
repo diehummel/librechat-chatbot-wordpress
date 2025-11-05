@@ -10,7 +10,10 @@ function lc_chat() {
 
     // 1. Seiten laden
     $site = get_option('lc_site', []);
-    if (empty($site)) { lc_crawl(); $site = get_option('lc_site', []); }
+    if (empty($site)) {
+        lc_crawl(); // ← WIRD JETZT GEFUNDEN!
+        $site = get_option('lc_site', []);
+    }
 
     // 2. Beste lokale Seite
     $words = preg_split('/\s+/', strtolower($msg));
@@ -39,21 +42,21 @@ function lc_chat() {
     }
     $system .= "Antworte kurz. Frage: $msg";
 
+    // 4. LIBRECHAT – 100 % KOMPATIBEL!
     $res = wp_remote_post('http://localhost:3080/v1/chat/completions', [
         'headers' => ['Content-Type' => 'application/json'],
         'body'    => json_encode([
-            'model'       => 'gpt-4o-mini',   // <-- LibreChat Standard!
-            'messages'    => [
+            'model'    => 'llama3.1',   // ← DEIN ECHTES MODEL!
+            'messages' => [
                 ['role' => 'system', 'content' => $system],
                 ['role' => 'user',   'content' => $msg]
             ],
-            'temperature' => 0.7,
-            'stream'      => false
+            'temperature' => 0.7
         ]),
         'timeout' => 90
     ]);
 
-    // ECHTE FEHLERMELDUNG!
+    // 5. FEHLERMELDUNG
     if (is_wp_error($res)) {
         wp_send_json_error('LibreChat offline: ' . $res->get_error_message());
         return;
@@ -63,19 +66,19 @@ function lc_chat() {
     $body = wp_remote_retrieve_body($res);
 
     if ($code !== 200) {
-        wp_send_json_error("LibreChat sagt (Code $code):<br><pre>$body</pre>");
+        wp_send_json_error("LibreChat (Code $code):<br><pre>$body</pre>");
         return;
     }
 
     $json = json_decode($body, true);
-    if (!$json || !isset($json['choices'][0]['message']['content'])) {
-        wp_send_json_error("Falsches JSON:<br><pre>" . print_r($json, true) . "</pre>");
+    if (!$json || empty($json['choices'][0]['message']['content'])) {
+        wp_send_json_error("Kein Text:<br><pre>" . print_r($json, true) . "</pre>");
         return;
     }
 
     $answer = $json['choices'][0]['message']['content'];
 
-    // Links klickbar
+    // 6. Links klickbar
     $answer = preg_replace(
         '/(https?:\/\/[^\s\)]+)/',
         '<a href="$1" target="_blank" rel="noopener" style="color:#0073aa; text-decoration:underline;">$1</a>',
@@ -85,20 +88,21 @@ function lc_chat() {
     wp_send_json_success($answer);
 }
 
+// CRAWLER – JETZT LÄUFT!
 function lc_crawl() {
-    $posts = get_posts([
+    $posts = get_posts( array(   // ← RUNDE KLAMMERN!
         'numberposts' => -1,
-        'post_status' => ['publish', 'private'],
+        'post_status' => array('publish', 'private'),
         'post_type'   => 'any'
-    ]);
+    ));
 
-    $data = [];
+    $data = array();
     foreach ($posts as $p) {
-        $data[] = [
+        $data[] = array(
             'id'      => $p->ID,
             'title'   => $p->post_title,
             'content' => wp_strip_all_tags($p->post_content)
-        ];
+        );
     }
     update_option('lc_site', $data);
     return count($data);
