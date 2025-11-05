@@ -9,9 +9,8 @@ function lc_chat() {
     $msg = sanitize_text_field($_POST['msg']);
 
     $site = get_option('lc_site', []);
-    if (empty($site)) { librechat_crawl(); $site = get_option('lc_site', []); }
+    if (empty($site)) { lc_crawl(); $site = get_option('lc_site', []); }
 
-    // Beste lokale Seite
     $words = preg_split('/\s+/', strtolower($msg));
     $best_url = $best_title = '';
     $best_score = 0;
@@ -31,14 +30,12 @@ function lc_chat() {
         }
     }
 
-    // Prompt
     $system = "Du bist ein schlanker Website-Assistent.\n";
     if ($best_score > 30) {
         $system .= "Lokaler Artikel: \"$best_title\"\n$best_url\n\n";
     }
     $system .= "Antworte kurz und ehrlich. Frage: $msg";
 
-    // LibreChat API (localhost:3008)
     $res = wp_remote_post('http://localhost:3080/v1/chat/completions', [
         'headers' => ['Content-Type' => 'application/json'],
         'body' => json_encode([
@@ -55,12 +52,11 @@ function lc_chat() {
     if (is_wp_error($res)) { wp_send_json_error('LibreChat offline?'); }
     $code = wp_remote_retrieve_response_code($res);
     $body = wp_remote_retrieve_body($res);
-    if ($code !== 200) { wp_send_json_error("LibreChat (Code $code): $body"); }
+    if ($code !== 200) { wp_send_json_error("Fehler $code"); }
 
     $json = json_decode($body, true);
     $answer = $json['choices'][0]['message']['content'] ?? 'Oops';
 
-    // Links klickbar
     $answer = preg_replace(
         '/(https?:\/\/[^\s\)]+)/',
         '<a href="$1" target="_blank" rel="noopener" style="color:#0073aa; text-decoration:underline;">$1</a>',
@@ -70,22 +66,21 @@ function lc_chat() {
     wp_send_json_success($answer);
 }
 
-function librechat_crawl() {
+function lc_crawl() {
     $posts = get_posts([
         'numberposts' => -1,
         'post_status' => ['publish', 'private'],
-        'post_type' => 'any'
+        'post_type'   => 'any'
     ]);
 
     $data = [];
     foreach ($posts as $p) {
         $data[] = [
-            'id' => $p->ID,
-            'title' => $p->post_title,
+            'id'      => $p->ID,
+            'title'   => $p->post_title,
             'content' => wp_strip_all_tags($p->post_content)
         ];
     }
     update_option('lc_site', $data);
     return count($data);
 }
-?>
