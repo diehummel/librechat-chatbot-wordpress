@@ -2,16 +2,16 @@
 if (!defined('ABSPATH')) exit;
 
 add_action('admin_menu', function () {
-    add_options_page('LibreChat Chatbot', 'LibreChat Chatbot', 'manage_options', 'lc', 'lc_page');
+    add_options_page('LibreChat', 'LibreChat', 'manage_options', 'lc', 'lc_admin_page');
 });
 
-function lc_page() {
+function lc_admin_page() {
     if ($_POST['save']) {
         update_option('lc_welcome', wp_kses_post($_POST['welcome']));
         echo '<div class="notice notice-success"><p>Gespeichert!</p></div>';
     }
     if ($_POST['crawl']) {
-        $count = librechat_crawl();
+        $count = lc_crawl();
         echo '<div class="notice notice-success"><p>✔ ' . $count . ' Seiten NEU gecrawlt!</p></div>';
     }
     ?>
@@ -28,7 +28,7 @@ function lc_page() {
         </form>
         <hr>
         <form method="post">
-            <?php submit_button('🔄 Jetzt NEU crawlen', 'secondary', 'crawl'); ?>
+            <?php submit_button('Jetzt NEU crawlen', 'secondary', 'crawl'); ?>
         </form>
     </div>
     <?php
