@@ -39,7 +39,7 @@ function lc_chat() {
     $system .= "Antworte kurz und ehrlich. Frage: $msg";
 
     // LibreChat API (localhost:3008)
-    $res = wp_remote_post('http://localhost:3008/v1/chat/completions', [
+    $res = wp_remote_post('http://localhost:3080/v1/chat/completions', [
         'headers' => ['Content-Type' => 'application/json'],
         'body' => json_encode([
             'model' => 'gpt-3.5-turbo',
