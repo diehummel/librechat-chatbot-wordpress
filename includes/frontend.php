@@ -43,15 +43,16 @@ function lc_chat() {
     $system .= "Antworte kurz. Frage: $msg";
 
     // 4. LIBRECHAT – 100 % KOMPATIBEL!
-    $res = wp_remote_post('http://localhost:3080/v1/chat/completions', [
+        $res = wp_remote_post('http://localhost:3080/v1/chat/completions', [
         'headers' => ['Content-Type' => 'application/json'],
         'body'    => json_encode([
-            'model'    => 'llama3.1',   // ← DEIN ECHTES MODEL!
+            'model'    => 'gpt-4o-mini',   // ← DEIN ECHTES MODEL!
             'messages' => [
                 ['role' => 'system', 'content' => $system],
                 ['role' => 'user',   'content' => $msg]
             ],
-            'temperature' => 0.7
+            'temperature' => 0.7,
+            'stream'      => false
         ]),
         'timeout' => 90
     ]);
