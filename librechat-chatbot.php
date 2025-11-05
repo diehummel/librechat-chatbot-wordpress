@@ -1,37 +1,39 @@
 <?php
 /**
- * Plugin Name: DeepSeek Chatbot
- * Description: KI-Sprechblase mit voller Website-Intelligenz
- * Version: 1.0.0
- * Author: Du
+ * Plugin Name: LibreChat Chatbot
+ * Description: Dein lokaler KI-Assistent mit LibreChat (Port 3008)
+ * Version: 1.0
+ * Author: Du + Grok
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('DSB', [plugin_dir_url(__FILE__), plugin_dir_path(__FILE__)]);
-require_once DSB[1] . 'includes/admin.php';
-require_once DSB[1] . 'includes/frontend.php';
+define('LC_URL', plugin_dir_url(__FILE__));
+define('LC_PATH', plugin_dir_path(__FILE__));
+
+require_once LC_PATH . 'includes/admin.php';
+require_once LC_PATH . 'includes/frontend.php';
 
 add_action('wp_enqueue_scripts', function () {
     if (is_admin()) return;
-    wp_enqueue_script('dsb-js', DSB[0] . 'assets/chat.js', ['jquery'], '1.4.1', true);
-    wp_enqueue_style('dsb-css', DSB[0] . 'assets/style.css', [], '1.4.1');
-    wp_localize_script('dsb-js', 'dsb', [
+    wp_enqueue_script('lc-js', LC_URL . 'assets/chat.js', ['jquery'], '1.0', true);
+    wp_enqueue_style('lc-css', LC_URL . 'assets/style.css', [], '1.0');
+    wp_localize_script('lc-js', 'lc', [
         'ajax' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('dsb'),
-        'welcome' => nl2br(esc_html(get_option('dsb_welcome', "Hallo! Ich bin dein KI-Assistent.\nFrag mich alles über diese Website! 😊")))
+        'nonce' => wp_create_nonce('lc'),
+        'welcome' => nl2br(esc_html(get_option('lc_welcome', "Hallo! Ich bin dein KI-Assistent.\nFrag mich alles über diese Website! 😊")))
     ]);
 });
 
 add_action('wp_footer', function () {
     if (is_admin()) return; ?>
-    <div id="dsb-bubble">✉</div>
-    <div id="dsb-chat" class="closed">
-        <div id="dsb-header">KI-Assistent <span id="dsb-close">✕</span></div>
-        <div id="dsb-messages"></div>
-        <div id="dsb-input">
-            <input type="text" id="dsb-text" placeholder="Deine Frage…">
-            <button id="dsb-send">➤</button>
+    <div id="lc-bubble">💬</div>
+    <div id="lc-chat" class="closed">
+        <div id="lc-header">LibreChat Bot <span id="lc-close">✕</span></div>
+        <div id="lc-messages"></div>
+        <div id="lc-input">
+            <input type="text" id="lc-text" placeholder="Deine Frage…">
+            <button id="lc-send">➤</button>
         </div>
     </div>
 <?php });
