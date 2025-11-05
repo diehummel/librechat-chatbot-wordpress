@@ -3,7 +3,7 @@
  * Plugin Name: LibreChat Chatbot
  * Description: Dein lokaler KI-Assistent mit LibreChat (Port 3008)
  * Version: 1.0
- * Author: Du + Grok
+ * Author: Du
  */
 
 if (!defined('ABSPATH')) exit;
