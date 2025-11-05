@@ -8,9 +8,11 @@ function lc_chat() {
     check_ajax_referer('lc', 'nonce');
     $msg = sanitize_text_field($_POST['msg']);
 
+    // 1. Seiten laden
     $site = get_option('lc_site', []);
     if (empty($site)) { lc_crawl(); $site = get_option('lc_site', []); }
 
+    // 2. Beste lokale Seite
     $words = preg_split('/\s+/', strtolower($msg));
     $best_url = $best_title = '';
     $best_score = 0;
@@ -30,12 +32,14 @@ function lc_chat() {
         }
     }
 
+    // 3. Prompt
     $system = "Du bist ein schlanker Website-Assistent.\n";
     if ($best_score > 30) {
         $system .= "Lokaler Artikel: \"$best_title\"\n$best_url\n\n";
     }
-    $system .= "Antworte kurz und ehrlich. Frage: $msg";
+    $system .= "Antworte kurz. Frage: $msg";
 
+    // 4. LibreChat API – JETZT MIT FEHLERMELDUNG!
     $res = wp_remote_post('http://localhost:3080/v1/chat/completions', [
         'headers' => ['Content-Type' => 'application/json'],
         'body' => json_encode([
@@ -49,14 +53,29 @@ function lc_chat() {
         'timeout' => 90
     ]);
 
-    if (is_wp_error($res)) { wp_send_json_error('LibreChat offline?'); }
+    // ECHTE FEHLERMELDUNG!
+    if (is_wp_error($res)) {
+        wp_send_json_error('LibreChat offline: ' . $res->get_error_message());
+        return;
+    }
+
     $code = wp_remote_retrieve_response_code($res);
     $body = wp_remote_retrieve_body($res);
-    if ($code !== 200) { wp_send_json_error("Fehler $code"); }
+
+    if ($code !== 200) {
+        wp_send_json_error("LibreChat sagt (Code $code):<br><pre>$body</pre>");
+        return;
+    }
 
     $json = json_decode($body, true);
-    $answer = $json['choices'][0]['message']['content'] ?? 'Oops';
+    if (!$json || !isset($json['choices'][0]['message']['content'])) {
+        wp_send_json_error("Falsches JSON:<br><pre>" . print_r($json, true) . "</pre>");
+        return;
+    }
 
+    $answer = $json['choices'][0]['message']['content'];
+
+    // Links klickbar
     $answer = preg_replace(
         '/(https?:\/\/[^\s\)]+)/',
         '<a href="$1" target="_blank" rel="noopener" style="color:#0073aa; text-decoration:underline;">$1</a>',
@@ -84,3 +103,4 @@ function lc_crawl() {
     update_option('lc_site', $data);
     return count($data);
 }
+?>
