@@ -39,16 +39,16 @@ function lc_chat() {
     }
     $system .= "Antworte kurz. Frage: $msg";
 
-    // 4. LibreChat API – JETZT MIT FEHLERMELDUNG!
     $res = wp_remote_post('http://localhost:3080/v1/chat/completions', [
         'headers' => ['Content-Type' => 'application/json'],
-        'body' => json_encode([
-            'model' => 'gpt-3.5-turbo',
-            'messages' => [
+        'body'    => json_encode([
+            'model'       => 'gpt-4o-mini',   // <-- LibreChat Standard!
+            'messages'    => [
                 ['role' => 'system', 'content' => $system],
-                ['role' => 'user', 'content' => $msg]
+                ['role' => 'user',   'content' => $msg]
             ],
-            'temperature' => 0.7
+            'temperature' => 0.7,
+            'stream'      => false
         ]),
         'timeout' => 90
     ]);
